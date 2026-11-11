@@ -1,7 +1,7 @@
-/* EXE CHAT - Cozy Cabin - engine v1.0.1 - form&soul.exe */
+/* EXE CHAT - Cozy Cabin - engine v1.0.2 - form&soul.exe */
 (function () {
   'use strict';
-  const VERSION = '1.0.1';
+  const VERSION = '1.0.2';
   const W = 600, H = 900;                         // native size of the scene (scaled by the host)
   const cl = v => Math.max(0, Math.min(1, v)), eo = v => 1 - Math.pow(1 - cl(v), 3), ei = v => cl(v) * cl(v);
   const eio = v => { v = cl(v); return v < .5 ? 4 * v * v * v : 1 - Math.pow(-2 * v + 2, 3) / 2; };
@@ -17,6 +17,7 @@
     cmdCooldown: 4, globalCooldown: 0.8,
     commands: Object.fromEntries(CMDS.map(c => [c, { on: true, trigger: '!' + c }])),
     showCommands: false,       // show "!cookie" as a plank too
+    cmdAnywhere: false,        // also react when the command is in the middle of a message
     events: { sub: true, follow: true, raid: true, bits: true, tip: true },
     firstTag: true, mentionWords: 'fox,zorro',
     ignore: '', light: true, sound: true, volume: 0.6, scale: 1,
@@ -286,13 +287,18 @@
       const deg = Math.round(h * 360), woody = deg >= 15 && deg <= 75;
       return `hsl(${deg} ${Math.round(Math.max(sat, .55) * 100)}% ${Math.min(l, woody ? .17 : .3) * 100}%)`; }
     const ignored = n => cfg.ignore.split(',').map(s => s.trim().toLowerCase()).filter(Boolean).includes(String(n).toLowerCase());
-    const commandFor = text => { const w = String(text).trim().split(/\s+/)[0].toLowerCase(); return CMDS.find(c => cfg.commands[c] && cfg.commands[c].on && cfg.commands[c].trigger.toLowerCase() === w); };
+    const cmdOf = w => CMDS.find(c => cfg.commands[c] && cfg.commands[c].on && cfg.commands[c].trigger.toLowerCase() === w);
+    // returns { c, only } — only = the message starts with the command (the usual Twitch way)
+    const commandFor = text => { const ws = String(text).trim().toLowerCase().split(/\s+/), c0 = cmdOf(ws[0]);
+      if (c0) return { c: c0, only: true };
+      if (cfg.cmdAnywhere) for (const w of ws.slice(1)) { const c = cmdOf(w.replace(/[.,;:?!)\]]+$/, '')); if (c) return { c, only: false }; }
+      return null; };
     // m = { name, color, text, parts:[{type:'text',text}|{type:'emote',url,name}], badges:[url], msgId, userId, first }
     function message(m) {
       if (typeof m === 'string') m = { name: arguments[0], color: arguments[1], text: arguments[2], first: arguments[3] };
       if (!m || !m.name || ignored(m.name)) return null;
       const c = commandFor(m.text || '');
-      if (c) { command(c, m.name); if (!cfg.showCommands) return null; }
+      if (c) { command(c.c, m.name); if (c.only && !cfg.showCommands) return null; }   // a sentence that contains a command still shows as a plank
       lastMsgAt = T;
       const first = m.first === true || (m.first === undefined && false);
       const body = m.parts ? m.parts.map(p => p.type === 'emote' ? `<img class="emote" src="${esc(p.url)}" alt="${esc(p.name)}">` : esc(p.text)).join('') : esc(m.text);
@@ -300,7 +306,7 @@
       const p = addPlank('msg', `${badges}<b style="color:${inkFor(m.color)}">${esc(m.name)}:</b> ${body}`, { first, msgId: m.msgId, userId: m.userId });
       if (asleep()) react('wake'); else lastActivity = T;
       const words = cfg.mentionWords.split(',').map(s => s.trim()).filter(Boolean);
-      if (words.length && new RegExp(`\\b(${words.map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})\\b`, 'i').test(m.text || '')) react('mention');
+      if (!c && words.length && new RegExp(`\\b(${words.map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})\\b`, 'i').test(m.text || '')) react('mention');
       seen.add(String(m.name).toLowerCase());
       return p;
     }
