@@ -1,7 +1,7 @@
-/* EXE CHAT - Cozy Cabin - engine v1.0.0 - form&soul.exe */
+/* EXE CHAT - Cozy Cabin - engine v1.0.1 - form&soul.exe */
 (function () {
   'use strict';
-  const VERSION = '1.0.0';
+  const VERSION = '1.0.1';
   const W = 600, H = 900;                         // native size of the scene (scaled by the host)
   const cl = v => Math.max(0, Math.min(1, v)), eo = v => 1 - Math.pow(1 - cl(v), 3), ei = v => cl(v) * cl(v);
   const eio = v => { v = cl(v); return v < .5 ? 4 * v * v * v : 1 - Math.pow(-2 * v + 2, 3) / 2; };
@@ -139,7 +139,10 @@
     let FX = [], FXOWNER = 0;
     function addFx(o) { const e = document.createElement(o.text ? 'div' : 'img'); e.className = o.text ? 'say' : 'fx';
       if (o.text) e.textContent = o.text; else { e.src = o.src; e.alt = ''; e.style.width = o.w + 'px'; }
-      el.appendChild(e); o.el = e; o.owner = FXOWNER; FX.push(o); return o; }
+      el.appendChild(e);
+      if (o.text) { const room = W - 24; let tw = e.offsetWidth;                    // keep the whole line inside the scene
+        if (tw > room) { e.style.fontSize = Math.floor(28 * room / tw) + 'px'; tw = e.offsetWidth; }
+        o.x = Math.max(12 + tw / 2, Math.min(W - 12 - tw / 2, o.x)); } o.el = e; o.owner = FXOWNER; FX.push(o); return o; }
     function renderFx(t) {
       FX.forEach(o => { const a = t - o.t0, u = a / o.dur;
         if (o.killAt !== undefined && (a < 0 || t - o.killAt > 0.22)) { o.el.remove(); o.dead = 1; return; }
