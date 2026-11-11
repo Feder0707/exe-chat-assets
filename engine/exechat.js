@@ -1,7 +1,7 @@
-/* EXE CHAT - Cozy Cabin - engine v1.0.2 - form&soul.exe */
+/* EXE CHAT - Cozy Cabin - engine v1.0.3 - form&soul.exe */
 (function () {
   'use strict';
-  const VERSION = '1.0.2';
+  const VERSION = '1.0.3';
   const W = 600, H = 900;                         // native size of the scene (scaled by the host)
   const cl = v => Math.max(0, Math.min(1, v)), eo = v => 1 - Math.pow(1 - cl(v), 3), ei = v => cl(v) * cl(v);
   const eio = v => { v = cl(v); return v < .5 ? 4 * v * v * v : 1 - Math.pow(-2 * v + 2, 3) / 2; };
@@ -50,7 +50,7 @@
 .xc .halo,.xc .floorlight{position:absolute;pointer-events:none;mix-blend-mode:screen;border-radius:50%;opacity:0}
 .xc .halo{width:260px;height:260px;margin:-130px 0 0 -130px;z-index:6}
 .xc .floorlight{width:230px;height:60px;margin:-30px 0 0 -115px;z-index:7}
-.xc .ledge{position:absolute;left:275px;top:792px;width:320px;z-index:6}
+.xc .ledge{position:absolute;left:275px;top:778px;width:320px;z-index:6}
 .xc .fox{position:absolute;left:0;top:0;z-index:7;transform-origin:50% 100%}
 .xc .foxsit{position:absolute;z-index:7;transform-origin:50% 100%}.xc .foxsit img{position:absolute}.xc .ftail{transform-origin:18% 88%}
 .xc .fx{position:absolute;z-index:9;pointer-events:none}
@@ -164,7 +164,7 @@
     }
 
     // ---------- the fox ----------
-    const FOXX = 506, FOXY = 830;
+    const FOXX = 506, FOXY = 816;   // fox and porch sit 14px higher so the porch board fits inside the 900px scene
     const FEET = { f_blanket: .5, f_boo: .32, f_catch: .419, f_cocoa: .316, f_cookie: .307, f_danceA: .525, f_danceB: .477, f_excited: .352, f_howl: .341, f_hug: .36, f_idle2: .382, f_lookup: .334, f_pet: .40, f_shake: .451, f_sleep: .5, f_tail: .5, f_wave: .396, f_yawn: .334 };
     const POSE = { pet: ['f_pet', .43], cookie: ['f_cookie', .43], cocoa: ['f_cocoa', .43], shake: ['f_shake', .41], danceA: ['f_danceA', .41], danceB: ['f_danceB', .41],
       boo: ['f_boo', .41], tail: ['f_tail', .43], hug: ['f_hug', .43], howl: ['f_howl', .43], blanket: ['f_blanket', .45], wave: ['f_wave', .41],
