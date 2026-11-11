@@ -1,0 +1,29 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>EXE CHAT · Cozy Cabin — preview</title>
+<style>
+body{margin:0;background:#141a2c;color:#e9eefb;font:15px system-ui,sans-serif;display:flex;flex-direction:column;align-items:center;gap:14px;padding:20px}
+#box{position:relative;width:400px;height:600px;max-width:100%;border-radius:12px;overflow:hidden;background:#24304f}
+.row{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;max-width:640px}
+button{background:#2b2216;border:1px solid #5b4425;color:#ffd9a6;border-radius:8px;padding:7px 10px;cursor:pointer}
+p{margin:0;color:#9aa7c7;font-size:13px}
+</style></head><body>
+<h1 style="margin:0;font-size:20px">EXE CHAT · Cozy Cabin</h1>
+<p>Live preview of the widget. Click once to enable sound.</p>
+<div id="box"></div>
+<div class="row" id="cmds"></div>
+<div class="row"><button data-e="msg">Chat message</button><button data-e="sub">Sub</button><button data-e="follow">Follow</button><button data-e="raid">Raid</button><button data-e="bits">Bits</button><button data-e="clear">Clear</button></div>
+<p>form&amp;soul.exe</p>
+<script src="engine/exechat.js"></script>
+<script>
+const box = document.getElementById('box');
+const chat = ExeChat.create({ root: box, base: './' });
+const fit = () => { const s = Math.min(box.clientWidth / ExeChat.W, box.clientHeight / ExeChat.H); chat.el.style.transform = `scale(${s})`; chat.el.style.left = (box.clientWidth - ExeChat.W * s) / 2 + 'px'; };
+fit(); addEventListener('resize', fit);
+const me = 'formandsoul_exe', lines = ['hi chat!', 'cozy vibes tonight', 'the fox is so cute', 'gg!', 'snow day stream'];
+let i = 0;
+ExeChat.COMMANDS.forEach(c => { const b = document.createElement('button'); b.textContent = '!' + c; b.onclick = () => chat.command(c, me); document.getElementById('cmds').appendChild(b); });
+document.querySelectorAll('[data-e]').forEach(b => b.onclick = () => { const e = b.dataset.e;
+  if (e === 'msg') chat.message({ name: me, color: '#1E90FF', text: lines[i++ % lines.length], first: i === 1 });
+  else if (e === 'clear') chat.clear(); else chat.event({ type: e, name: me, amount: e === 'bits' ? 100 : e === 'raid' ? 25 : 1 }); });
+setTimeout(() => chat.message({ name: me, color: '#1E90FF', text: 'hi chat! welcome to the cabin', first: true }), 600);
+</script></body></html>
