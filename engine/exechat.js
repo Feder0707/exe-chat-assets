@@ -1,7 +1,7 @@
-/* EXE CHAT - Cozy Cabin - engine v1.0.3 - form&soul.exe */
+/* EXE CHAT - Cozy Cabin - engine v1.0.4 - form&soul.exe */
 (function () {
   'use strict';
-  const VERSION = '1.0.3';
+  const VERSION = '1.0.4';
   const W = 600, H = 900;                         // native size of the scene (scaled by the host)
   const cl = v => Math.max(0, Math.min(1, v)), eo = v => 1 - Math.pow(1 - cl(v), 3), ei = v => cl(v) * cl(v);
   const eio = v => { v = cl(v); return v < .5 ? 4 * v * v * v : 1 - Math.pow(-2 * v + 2, 3) / 2; };
@@ -79,7 +79,7 @@
     let T = 0, dead = false;
 
     // ---------- sound ----------
-    const VOICES = new Set([...CMDS, 'wake', 'mention', 'sub', 'follow', 'raid', 'bits']);
+    const VOICES = new Set([...CMDS, 'wake', 'mention', 'sub', 'follow', 'raid', 'bits', 'tip']);
     let curSnd = null;
     function sfx(name, delay = 0, voice = false) {
       if (!cfg.sound || manual) return;
@@ -172,6 +172,10 @@
     const SIZE = { f_blanket: [267, 302], f_boo: [296, 391], f_catch: [296, 362], f_cocoa: [248, 304], f_cookie: [253, 304], f_danceA: [279, 425], f_danceB: [281, 425], f_excited: [270, 399], f_howl: [284, 331], f_hug: [270, 304], f_idle2: [254, 388], f_lookup: [282, 353], f_pet: [304, 313], f_shake: [321, 318], f_sleep: [325, 250], f_tail: [267, 310], f_wave: [281, 425], f_yawn: [318, 320] };
     const ANIM = { pet: { base: 'f_pet', w: 328, h: 319, k: .422, feet: .502, seq: [0, 1, 2, 1], fps: 4.5 }, cookie: { base: 'f_cookie', w: 253, h: 291, k: .449, feet: .381, seq: [0, 1, 2, 1], fps: 5 }, wave: { base: 'f_wave', w: 294, h: 355, k: .49, feet: .494, seq: [0, 1], fps: 4 } };
     const hearts = (n, t0, src = 'heart') => { for (let k = 0; k < n; k++) addFx({ src: A + src + '.webp', x: FOXX - 30 + k * 28, y: FOXY - 150, w: 22, vy: -60, wob: 8, ph: k, t0: t0 + k * 0.35, dur: 1.6 }); };
+    // sub: hearts fan out from the fox; raid: a burst of snowflakes; bits/tip: a few twinkles by the caught coin
+    const heartBurst = (n, t0) => { for (let k = 0; k < n; k++) { const f = n > 1 ? k / (n - 1) - .5 : 0; addFx({ src: A + (k % 2 ? 'heart2' : 'heart') + '.webp', x: FOXX + f * 40, y: FOXY - 140, w: 20 + (k % 3) * 4, vx: f * 230, vy: -150 - (k % 3) * 25, g: 120, wob: 6, ph: k, t0: t0 + k * 0.05, dur: 1.5 }); } };
+    const snowBurst = (n, t0) => { for (let k = 0; k < n; k++) { const a = -Math.PI * (0.08 + 0.84 * k / (n - 1)); addFx({ src: A + 'flake1.webp', x: FOXX, y: FOXY - 160, w: 16 + (k % 3) * 5, vx: Math.cos(a) * (170 + (k % 4) * 30), vy: Math.sin(a) * (200 + (k % 3) * 40), g: 260, spin: (k % 2 ? 1 : -1) * 180, t0, dur: 1.3, fade: 1 }); } };
+    const twinkle = (n, t0, cx, cy) => { for (let k = 0; k < n; k++) addFx({ src: A + 'sparkle.webp', x: cx + [-34, 30, 4][k % 3], y: cy + [6, -10, -40][k % 3], w: 20, grow: 0.5, t0: t0 + k * 0.12, dur: 0.7, fade: 1 }); };
     const sparks = (n, t0, cx = FOXX, cy = FOXY - 175) => { for (let k = 0; k < n; k++) { const a = k / n * Math.PI * 2; addFx({ src: A + 'sparkle.webp', x: cx, y: cy, w: 18, vx: Math.cos(a) * 120, vy: Math.sin(a) * 90, t0, dur: 0.9, fade: 1 }); } };
     const say = (text, t0, dur = 2.2) => addFx({ text, x: FOXX, y: FOXY - 215, vy: -10, t0, dur });
     const R = {
@@ -193,13 +197,15 @@
       wave: { dur: 2.4, pose: () => 'wave', move: a => ({ rot: Math.sin(a * 10) * 3 }), start: (t, u) => say(`hi, ${u}!`, t + 0.1, 2.2) },
       wake: { dur: 0.9, pose: () => 'yawn', move: a => ({ sy: 1 + 0.04 * Math.sin(a / 0.9 * Math.PI) }) },
       mention: { dur: 1.8, pose: () => 'lookup', move: a => ({ dy: -4 * Math.sin(a * 4) }), start: t => sparks(5, t + 0.1, FOXX + 20, FOXY - 170) },
-      sub: { dur: 2.8, pose: () => 'excited', move: a => ({ dy: -Math.abs(Math.sin(a * 6)) * 14 * cl(1 - a / 2.8) }), start: t => { sparks(10, t); hearts(3, t + 0.4); } },
+      sub: { dur: 2.8, pose: () => 'excited', move: a => ({ dy: -Math.abs(Math.sin(a * 6)) * 14 * cl(1 - a / 2.8) }), start: t => { heartBurst(7, t + 0.1); heartBurst(5, t + 0.9); } },
       follow: { dur: 2.4, pose: () => 'wave', move: a => ({ rot: Math.sin(a * 10) * 3 }), start: (t, u) => say(`thanks, ${u}!`, t + 0.1, 2.2) },
-      raid: { dur: 3.4, pose: a => Math.floor(a / 0.4) % 2 ? 'excited' : 'boo', move: a => ({ dy: -Math.abs(Math.sin(a * 8)) * 18 }), start: t => { sparks(12, t); sparks(12, t + 0.8); say('RAID!', t, 1.6); } },
+      raid: { dur: 3.4, pose: a => Math.floor(a / 0.4) % 2 ? 'excited' : 'boo', move: a => ({ dy: -Math.abs(Math.sin(a * 8)) * 18 }), start: t => { snowBurst(16, t); snowBurst(16, t + 0.8); say('RAID!', t, 1.6); } },
       bits: { dur: 2.6, pose: a => a < 0.8 ? 'lookup' : 'catch', move: a => a > 0.8 ? ({ dy: -8 * Math.sin(cl((a - .8) / .4) * Math.PI) }) : {},
-        start: t => { addFx({ src: A + 'coin.webp', coin: 1, x: FOXX + 150, y: FOXY - 200, w: 34, vx: -183, vy: -250, g: 758, t0: t, dur: 0.82 }); sparks(8, t + 0.82, FOXX, FOXY - 200); } },
+        start: t => { addFx({ src: A + 'coin.webp', coin: 1, x: FOXX + 150, y: FOXY - 200, w: 34, vx: -183, vy: -250, g: 758, t0: t, dur: 0.82 }); twinkle(3, t + 0.82, FOXX, FOXY - 205); } },
+      tip: { dur: 3.0, pose: a => a < 0.55 ? 'lookup' : (Math.floor((a - .55) / 0.3) % 2 ? 'danceB' : 'danceA'), move: a => a > 0.55 ? ({ dy: -5 * Math.abs(Math.sin((a - .55) * 10.5)) }) : {},
+        start: t => { [[-26, 0], [18, 0.32], [-6, 0.64]].forEach(([dx, d]) => addFx({ src: A + 'coin.webp', coin: 1, x: FOXX + dx, y: FOXY - 330, w: 30, g: 900, t0: t + d, dur: 0.6 }));
+          twinkle(3, t + 1.25, FOXX, FOXY - 205); say('thank you!', t + 1.2, 1.6); } },
     };
-    R.tip = R.bits;
     const LIGHT = { idle: [255, 190, 120, .10, 0], idle2: [255, 190, 120, .10, 0], sleep: [120, 150, 255, .12, .25], wake: [255, 210, 150, .25, 0],
       pet: [255, 150, 200, .55, .8], cookie: [255, 180, 90, .45, 0], cocoa: [255, 140, 70, .55, .5], snowball: [170, 220, 255, .65, 0],
       dance: [0, 0, 0, .6, 2], nap: [110, 140, 255, .28, .3], boo: [235, 240, 255, .8, 0], tail: [255, 200, 120, .45, 1.5],
@@ -224,7 +230,7 @@
     }
     function renderFox(t) {
       if (cur && t - cur.t0 > R[cur.name].dur) { lastActivity = cur.name === 'nap' ? t - cfg.sleepAfter - 0.01 : Math.max(lastActivity, t); cur = null; }
-      if (!cur && queue.length) { const q = queue.shift(); cur = { name: q.name, t0: t, user: q.user, id: ++rid }; FXOWNER = rid; R[q.name].start && R[q.name].start(t, q.user || ''); FXOWNER = 0; if (VOICES.has(q.name)) sfx(q.name === 'tip' ? 'bits' : q.name, 0, true); }
+      if (!cur && queue.length) { const q = queue.shift(); cur = { name: q.name, t0: t, user: q.user, id: ++rid }; FXOWNER = rid; R[q.name].start && R[q.name].start(t, q.user || ''); FXOWNER = 0; if (VOICES.has(q.name)) sfx(q.name, 0, true); }
       let pose = 'idle', mv = {};
       if (cur) { const a = t - cur.t0, r = R[cur.name]; pose = r.pose(a); mv = r.move(a) || {}; }
       else if (t - lastActivity > cfg.sleepAfter) { pose = 'sleep'; mv = { sy: 1 + 0.03 * Math.sin(t * 1.6) }; }
